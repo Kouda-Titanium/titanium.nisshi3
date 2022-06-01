@@ -1,3 +1,5 @@
+@file:Suppress("FunctionName")
+
 import titanium.nisshi3.Category
 import titanium.nisshi3.Comment
 import titanium.nisshi3.Diary
@@ -6,14 +8,17 @@ import titanium.nisshi3.HourMinute
 import titanium.nisshi3.HourMinuteRange
 import titanium.nisshi3.HourMinuteRangeList
 import titanium.nisshi3.Work
-import titanium.nisshi3.rangeTo as rangeTo2
+import titanium.nisshi3.rangeTo
+import kotlin.math.roundToInt
 
 
-operator fun HourMinute.rangeTo(to: HourMinute) = this.rangeTo2(to) // TODO conflict
+private fun Int.toHourMinute() = HourMinute(this, 0)
+private fun Double.toHourMinute() = (this * 60.0).roundToInt().let { minutes -> HourMinute(minutes / 60, minutes % 60) }
 
-fun t(hour: Int, minute: Int = 0) = HourMinute(hour, minute) // TODO もっといいインターフェースに
-
-fun Category() = Category() // TODO conflict
+infix fun Int.To(to: Int) = this.toHourMinute()..to.toHourMinute()
+infix fun Int.To(to: Double) = this.toHourMinute()..to.toHourMinute()
+infix fun Double.To(to: Int) = this.toHourMinute()..to.toHourMinute()
+infix fun Double.To(to: Double) = this.toHourMinute()..to.toHourMinute()
 
 
 interface DiaryBuilder {
@@ -28,11 +33,11 @@ interface DayCategoryScope {
     /** @receiver 句点を含まない日本語の文 */
     operator fun String.invoke(head: HourMinuteRange, vararg tail: HourMinuteRange, isRest: Boolean = false)
 
-    /** @receiver 任意の日本語の言葉 */
+    /** @receiver 任意のラベル */
     operator fun String.invoke()
 }
 
-fun nisshi(block: DiaryBuilder.() -> Unit): Diary { // TODO rename
+fun diary(block: DiaryBuilder.() -> Unit): Diary {
     val diaryBuilder = object : DiaryBuilder {
         private val diaryItems = mutableListOf<DiaryItem>()
 

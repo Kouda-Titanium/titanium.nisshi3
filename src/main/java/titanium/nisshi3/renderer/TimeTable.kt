@@ -67,7 +67,7 @@ private fun Iterable<Work>.sections() = this.flatMap { work -> work.timeRanges.r
 
 // rendering
 
-fun Diary.toTimeTableString(categories: List<Category?>): String {
+fun Diary.toTimeTableString(vararg categories: Category?): String {
     return (1..lastDay).joinToString("\n") { day ->
         categories.flatMapIndexed { i, category ->
             when {
