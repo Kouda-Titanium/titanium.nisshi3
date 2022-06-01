@@ -13,7 +13,7 @@ import kotlin.math.roundToInt
 
 
 private fun Int.toHourMinute() = HourMinute(this, 0)
-private fun Double.toHourMinute() = (this * 60.0).roundToInt().let { minutes -> HourMinute(minutes / 60, minutes % 60) }
+private fun Double.toHourMinute() = (this * 100.0).roundToInt().let { minutes -> HourMinute(minutes / 100, minutes % 100) }
 
 infix fun Int.To(to: Int) = this.toHourMinute()..to.toHourMinute()
 infix fun Int.To(to: Double) = this.toHourMinute()..to.toHourMinute()
