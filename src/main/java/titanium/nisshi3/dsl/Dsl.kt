@@ -1,5 +1,7 @@
 @file:Suppress("FunctionName")
 
+package titanium.nisshi3.dsl
+
 import titanium.nisshi3.Category
 import titanium.nisshi3.Comment
 import titanium.nisshi3.Diary

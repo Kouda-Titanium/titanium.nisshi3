@@ -1,5 +1,7 @@
 import org.junit.Test
 import titanium.nisshi3.Category
+import titanium.nisshi3.dsl.To
+import titanium.nisshi3.dsl.diary
 import titanium.nisshi3.renderer.toJapanese
 import titanium.nisshi3.renderer.toTimeTableString
 
