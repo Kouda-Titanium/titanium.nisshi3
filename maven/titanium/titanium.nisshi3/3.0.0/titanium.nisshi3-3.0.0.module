@@ -1,0 +1,73 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "titanium",
+    "module": "titanium.nisshi3",
+    "version": "3.0.0",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "7.1.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api",
+        "org.jetbrains.kotlin.localToProject": "public",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "files": [
+        {
+          "name": "titanium.nisshi3-3.0.0.jar",
+          "url": "titanium.nisshi3-3.0.0.jar",
+          "size": 52133,
+          "sha512": "0a193c5561b14e17762242e07423c7fb92466218e026326932d4f3d34826007529383cfc063d95b9621c63274f96c1f7352c59671363e08960581a9062eaf7e4",
+          "sha256": "a9722b21c9361f29fed6be3da5a05e82fea36eec8a4051febd061b7c4576112e",
+          "sha1": "bdf98541d93f5238490d7f1cf93d6824dc569ed4",
+          "md5": "3e526c7f5bb9264f4f5d3abe0dc0430d"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.localToProject": "public",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib-jdk8",
+          "version": {
+            "requires": "1.5.20"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "titanium.nisshi3-3.0.0.jar",
+          "url": "titanium.nisshi3-3.0.0.jar",
+          "size": 52133,
+          "sha512": "0a193c5561b14e17762242e07423c7fb92466218e026326932d4f3d34826007529383cfc063d95b9621c63274f96c1f7352c59671363e08960581a9062eaf7e4",
+          "sha256": "a9722b21c9361f29fed6be3da5a05e82fea36eec8a4051febd061b7c4576112e",
+          "sha1": "bdf98541d93f5238490d7f1cf93d6824dc569ed4",
+          "md5": "3e526c7f5bb9264f4f5d3abe0dc0430d"
+        }
+      ]
+    }
+  ]
+}
