@@ -1,5 +1,6 @@
 package titanium.nisshi3.renderer
 
+import mirrg.kotlin.hydrogen.formatAs
 import titanium.nisshi3.Category
 import titanium.nisshi3.Diary
 import titanium.nisshi3.HourMinute
@@ -11,7 +12,6 @@ import titanium.nisshi3.excludingSeconds
 import titanium.nisshi3.filterCategory
 import titanium.nisshi3.filterDay
 import titanium.nisshi3.filterNonRests
-import titanium.nisshi3.formatAs
 import titanium.nisshi3.lastDay
 import titanium.nisshi3.plus
 import titanium.nisshi3.rangeTo
