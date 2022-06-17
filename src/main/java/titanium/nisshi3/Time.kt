@@ -1,8 +1,13 @@
 package titanium.nisshi3
 
+import mirrg.kotlin.hydrogen.formatAs
+import mirrg.kotlin.hydrogen.join
+
 // definition
 
-data class HourMinute(val hour: Int, val minute: Int)
+data class HourMinute(val hour: Int, val minute: Int) {
+    override fun toString() = "${hour formatAs "%02d"}:${minute formatAs "%02d"}"
+}
 
 operator fun HourMinute.compareTo(other: HourMinute): Int {
     this.hour.compareTo(other.hour).let { if (it != 0) return it }
@@ -14,6 +19,8 @@ data class HourMinuteRange(val start: HourMinute, val end: HourMinute) {
     init {
         require(start < end) { "異常な時間範囲: $start < $end" }
     }
+
+    override fun toString() = "$start..$end"
 }
 
 operator fun HourMinute.rangeTo(to: HourMinute) = HourMinuteRange(this, to)
@@ -26,6 +33,8 @@ data class HourMinuteRangeList(val ranges: List<HourMinuteRange>) {
             }
         }
     }
+
+    override fun toString() = ranges.join(",") { it.toString() }
 }
 
 
