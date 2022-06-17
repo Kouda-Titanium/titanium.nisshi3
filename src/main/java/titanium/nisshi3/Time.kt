@@ -29,7 +29,7 @@ data class HourMinuteRangeList(val ranges: List<HourMinuteRange>) {
     init {
         if (ranges.size >= 2) { // 2個以上の要素がある場合（例：size = 5）
             repeat(ranges.size - 1) { i -> // 例：i = 0..3
-                require(ranges[i].end <= ranges[i + 1].start) // 前の範囲の末尾は後の範囲の先頭より後ではならない
+                require(ranges[i].end <= ranges[i + 1].start) { "前の範囲の末尾は後の範囲の先頭より後であってはならない: ${ranges[i].end} <= ${ranges[i + 1].start}" }
             }
         }
     }
