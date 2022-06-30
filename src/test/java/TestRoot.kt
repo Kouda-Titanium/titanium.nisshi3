@@ -14,6 +14,7 @@ class TestRoot {
         val diary = diary {
             2 {
                 c1 { "テスト"(1 To 1.15, 2 To 3, 4.45 To 5, 5.10 To 6.59) }
+                c1 { "コメント。"() }
             }
         }
 
