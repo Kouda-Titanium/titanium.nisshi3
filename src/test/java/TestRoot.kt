@@ -18,7 +18,7 @@ class TestRoot {
             }
         }
 
-        println("=== apanese ===")
+        println("=== Japanese ===")
         println(diary.toJapanese(c1, c2))
         println("=== Time Table ===")
         println(diary.toTimeTableString(c1, c2))
