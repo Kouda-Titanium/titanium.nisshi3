@@ -35,9 +35,11 @@ fun <T> Sequence<T>.join(separator: CharSequence = ", ", transform: (T) -> CharS
 
 
 /** 先頭の文字のみを大文字にします。 */
+@Suppress("DEPRECATION")
 fun String.toUpperCaseHead() = if (isEmpty()) this else take(1).toUpperCase() + drop(1)
 
 /** 先頭の文字のみを小文字にします。 */
+@Suppress("DEPRECATION")
 fun String.toLowerCaseHead() = if (isEmpty()) this else take(1).toLowerCase() + drop(1)
 
 /** @receiver スネークケースの文字列 */
