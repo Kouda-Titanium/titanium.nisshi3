@@ -8,12 +8,12 @@ import titanium.nisshi3.HourMinuteRange
 import titanium.nisshi3.HourMinuteRangeList
 import titanium.nisshi3.Work
 import titanium.nisshi3.concat
+import titanium.nisshi3.envelope
 import titanium.nisshi3.excludingSeconds
 import titanium.nisshi3.filterCategory
 import titanium.nisshi3.filterDay
 import titanium.nisshi3.filterNonRests
 import titanium.nisshi3.lastDay
-import titanium.nisshi3.plus
 import titanium.nisshi3.rangeTo
 import titanium.nisshi3.seconds
 import titanium.nisshi3.works
@@ -51,8 +51,8 @@ private val List<WorkSection>.doubleRangedRecord: DoubleRangedRecord
                 }.maxByOrNull { it.separation }!!
 
                 DoubleRangedRecord(
-                    tuple.head.ranges.first() + tuple.head.ranges.last(),
-                    tuple.tail.ranges.first() + tuple.tail.ranges.last(),
+                    tuple.head.ranges.first() envelope tuple.head.ranges.last(),
+                    tuple.tail.ranges.first() envelope tuple.tail.ranges.last(),
                     tuple.head.excludingSeconds + tuple.tail.excludingSeconds
                 )
             }
