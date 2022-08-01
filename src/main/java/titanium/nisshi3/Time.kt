@@ -2,17 +2,18 @@ package titanium.nisshi3
 
 import mirrg.kotlin.hydrogen.formatAs
 import mirrg.kotlin.hydrogen.join
+import mirrg.kotlin.hydrogen.max
+import mirrg.kotlin.hydrogen.min
 
 // definition
 
-data class HourMinute(val hour: Int, val minute: Int) {
+data class HourMinute(val hour: Int, val minute: Int) : Comparable<HourMinute> {
     override fun toString() = "${hour formatAs "%02d"}:${minute formatAs "%02d"}"
-}
-
-operator fun HourMinute.compareTo(other: HourMinute): Int {
-    this.hour.compareTo(other.hour).let { if (it != 0) return it }
-    this.minute.compareTo(other.minute).let { if (it != 0) return it }
-    return 0
+    override fun compareTo(other: HourMinute): Int {
+        this.hour.compareTo(other.hour).let { if (it != 0) return it }
+        this.minute.compareTo(other.minute).let { if (it != 0) return it }
+        return 0
+    }
 }
 
 data class HourMinuteRange(val start: HourMinute, val end: HourMinute) {
@@ -51,6 +52,9 @@ operator fun HourMinuteRange.plus(other: HourMinuteRange): HourMinuteRange {
     require(this.end == other.start) { "不連続な結合: $this + $other" }
     return this.start..other.end
 }
+
+/** 二つの区間を含む最小の区間を返します。 */
+infix fun HourMinuteRange.envelope(other: HourMinuteRange) = (this.start min other.start)..(this.end max other.end)
 
 /** すべての結合可能な隣接時間を結合したリストを返します。 */
 fun HourMinuteRangeList.concat(): HourMinuteRangeList {
