@@ -5,7 +5,8 @@ package titanium.nisshi3
 
 class Diary(val items: List<DiaryItem>)
 
-class Category
+class Category(val name: String) {
+}
 
 sealed class DiaryItem(val day: Int, val category: Category) {
     init {
