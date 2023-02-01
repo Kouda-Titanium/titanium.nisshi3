@@ -1,11 +1,17 @@
 package titanium.nisshi3
 
+import mirrg.kotlin.hydrogen.formatAs
+import mirrg.kotlin.hydrogen.join
+
 
 // definition
 
-class Diary(val items: List<DiaryItem>)
+class Diary(val items: List<DiaryItem>) {
+    override fun toString() = items.join("\n") { "$it" }
+}
 
 class Category(val name: String) {
+    override fun toString() = "[$name]"
 }
 
 sealed class DiaryItem(val day: Int, val category: Category) {
@@ -14,8 +20,13 @@ sealed class DiaryItem(val day: Int, val category: Category) {
     }
 }
 
-class Work(day: Int, category: Category, val description: String, val timeRanges: HourMinuteRangeList, val isRest: Boolean) : DiaryItem(day, category)
-class Comment(day: Int, category: Category, val label: String) : DiaryItem(day, category)
+class Work(day: Int, category: Category, val description: String, val timeRanges: HourMinuteRangeList, val isRest: Boolean) : DiaryItem(day, category) {
+    override fun toString() = "${day formatAs "%2d"}: [${category.name}] ${if (isRest) "* " else ""}${description.replace("""\r\n?|\n""".toRegex(), "|")} ($timeRanges)"
+}
+
+class Comment(day: Int, category: Category, val label: String) : DiaryItem(day, category) {
+    override fun toString() = "${day formatAs "%2d"}: [${category.name}] ${label.replace("""\r\n?|\n""".toRegex(), "|")}"
+}
 
 
 // Utility
