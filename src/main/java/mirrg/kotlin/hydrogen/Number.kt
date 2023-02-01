@@ -18,6 +18,9 @@
 
 package mirrg.kotlin.hydrogen
 
+import kotlin.math.ceil
+import kotlin.math.floor
+
 
 // 上限・下限
 infix fun Byte.atMost(other: Byte) = coerceAtMost(other)
@@ -40,3 +43,14 @@ infix fun <T : Comparable<T>> T.atLeast(other: T) = coerceAtLeast(other)
 infix fun <T : Comparable<T>> T.min(other: T) = if (this <= other) this else other
 infix fun <T : Comparable<T>> T.max(other: T) = if (this >= other) this else other
 infix fun <T : Comparable<T>> T.cmp(other: T) = compareTo(other)
+
+
+// 丸め
+fun Float.floorToInt() = floor(this).toInt()
+fun Float.floorToLong() = floor(this).toLong()
+fun Double.floorToInt() = floor(this).toInt()
+fun Double.floorToLong() = floor(this).toLong()
+fun Float.ceilToInt() = ceil(this).toInt()
+fun Float.ceilToLong() = ceil(this).toLong()
+fun Double.ceilToInt() = ceil(this).toInt()
+fun Double.ceilToLong() = ceil(this).toLong()

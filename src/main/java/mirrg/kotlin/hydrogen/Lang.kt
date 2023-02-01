@@ -22,3 +22,5 @@ inline fun unit(block: () -> Unit) = block()
 inline fun <reified O : Any> Any.castOrThrow() = this as O
 inline fun <reified O : Any> Any.castOrNull() = this as? O
 inline fun <S> S?.or(default: () -> S) = this ?: default()
+
+fun Boolean.toUnitOrNull() = if (this) Unit else null
