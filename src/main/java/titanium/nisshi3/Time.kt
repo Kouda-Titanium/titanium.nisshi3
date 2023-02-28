@@ -71,5 +71,8 @@ fun HourMinuteRangeList.concat(): HourMinuteRangeList {
 
 // others
 
+/** 時間列の各時間の秒数の合計を返します。 */
+val HourMinuteRangeList.seconds get() = this.ranges.sumOf { it.seconds }
+
 /** 時間列全体の開始時刻から終了時刻までで、どの時間にも含まれない秒数を計算します。 */
 val HourMinuteRangeList.excludingSeconds get() = if (ranges.size <= 1) 0 else (ranges.last().end.seconds - ranges.first().start.seconds) - ranges.sumOf { it.seconds }
