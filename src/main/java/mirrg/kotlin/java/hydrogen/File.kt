@@ -32,3 +32,8 @@ fun File.deleteOrThrow() {
     if (!exists()) throw FileNotFoundException("File $absolutePath not found")
     if (!delete()) throw IOException("Could not delete the file: $absolutePath")
 }
+
+fun File.createParentDirectories() {
+    val parentFile = this.canonicalFile.parentFile ?: return // このファイルはルートだった
+    parentFile.mkdirsOrThrow()
+}

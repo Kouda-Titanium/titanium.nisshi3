@@ -99,6 +99,7 @@ class JsonWrapper(val jsonElement: JsonElement?, val path: String = "$") {
             jsonElement.isBoolean -> jsonElement.asBoolean.toString()
             else -> throw IllegalStateException()
         }
+
         is JsonNull -> "null"
         else -> throw IllegalStateException()
     }
