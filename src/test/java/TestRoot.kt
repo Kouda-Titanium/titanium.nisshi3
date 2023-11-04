@@ -8,8 +8,8 @@ import titanium.nisshi3.renderer.toTimeTableString
 class TestRoot {
     @Test
     fun test() {
-        val c1 = Category()
-        val c2 = Category()
+        val c1 = Category("Category 1")
+        val c2 = Category("Category 2")
 
         val diary = diary {
             2 {
