@@ -22,6 +22,10 @@ package mirrg.kotlin.hydrogen
 val String.notEmptyOrNull get() = ifEmpty { null }
 val String.notBlankOrNull get() = ifBlank { null }
 
+fun String.indent(indent: String) = indent + this.replace("""\r\n|\n|\r""".toRegex()) { it.value + indent }
+
+fun String.escapeRegex() = this.replace("""[.\[^$()*+?{|\\]""".toRegex()) { "\\" + it.groups[0]?.value!! }
+
 
 // toStringを呼び出さないjoin
 
