@@ -39,6 +39,7 @@ private val List<WorkSection>.doubleRangedRecord: DoubleRangedRecord
             0 -> DoubleRangedRecord(null, null, 0)
             1 -> DoubleRangedRecord(timeRanges.ranges[0], null, 0)
             2 -> DoubleRangedRecord(timeRanges.ranges[0], timeRanges.ranges[1], 0)
+
             else -> {
                 class Tuple(val head: HourMinuteRangeList, val tail: HourMinuteRangeList, val separation: Int)
 
