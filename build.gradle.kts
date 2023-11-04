@@ -39,7 +39,7 @@ tasks {
     register("fetchMirrgKotlin") {
         doFirst {
             fun fetch(fileName: String) {
-                val file = File("src/main/java").resolve(fileName)
+                val file = project.rootDir.resolve("src/main/java").resolve(fileName)
                 when {
                     file.parentFile.isDirectory -> Unit
                     file.parentFile.exists() -> throw RuntimeException("Already exists: ${file.parentFile}")
