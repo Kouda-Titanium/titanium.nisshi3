@@ -55,6 +55,8 @@ tasks {
             fetch("mirrg/kotlin/hydrogen/Number.kt")
             fetch("mirrg/kotlin/hydrogen/String.kt")
             fetch("mirrg/kotlin/java/hydrogen/Time.kt")
+            fetch("mirrg/kotlin/java/hydrogen/String.kt")
+            fetch("mirrg/kotlin/java/hydrogen/File.kt")
             fetch("mirrg/kotlin/gson/hydrogen/Gson.kt")
             fetch("mirrg/kotlin/gson/hydrogen/JsonWrapper.kt")
         }
