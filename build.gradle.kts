@@ -17,6 +17,8 @@ repositories {
 
 dependencies {
     testImplementation("junit:junit:4.13.2")
+    implementation("com.github.pgreze:kotlin-process:1.4.1")
+    implementation("com.google.code.gson:gson:2.10.1")
 }
 
 publishing {
@@ -51,6 +53,8 @@ tasks {
             fetch("mirrg/kotlin/hydrogen/Lang.kt")
             fetch("mirrg/kotlin/hydrogen/Number.kt")
             fetch("mirrg/kotlin/hydrogen/String.kt")
+            fetch("mirrg/kotlin/gson/hydrogen/Gson.kt")
+            fetch("mirrg/kotlin/gson/hydrogen/JsonWrapper.kt")
         }
     }
 }
