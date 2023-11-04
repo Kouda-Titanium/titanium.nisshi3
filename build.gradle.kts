@@ -19,6 +19,7 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     implementation("com.github.pgreze:kotlin-process:1.4.1")
     implementation("com.google.code.gson:gson:2.10.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
 }
 
 publishing {
