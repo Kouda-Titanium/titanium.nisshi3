@@ -4,12 +4,39 @@ import mirrg.kotlin.hydrogen.join
 import java.io.File
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
-private suspend fun main() {
-    val client = GitHubClient(GitHubClient.Cache(File("./build/GitHubClient/cache"), Duration.ofMinutes(60)))
+private val client = GitHubClient(GitHubClient.Cache(File("./build/GitHubClient/cache"), Duration.ofMinutes(60)))
 
+private suspend fun main() {
+    val issues = client.searchIssue("Kouda-Titanium")
+    issues
+        .flatMap { issue ->
+            val issue2 = client.getIssue(issue.repository!!, issue.number)
+            issue2.comments!!
+                .filter { it.author == "Kouda-Titanium" }
+                .map { comment ->
+                    Pair(issue, comment)
+                }
+        }
+        .sortedBy { it.second.createdAt }
+        .forEach { (issue, comment) ->
+            println("[${comment.createdAt.render()}] ${issue.repository}/#${issue.number}(${issue.title}): <${comment.author}> ${comment.body.renderAsInline(chars = 200)}")
+        }
+}
+
+private suspend fun main2() {
+    val commits = client.searchCommit(LocalDate.of(2023, 11, 1), LocalDate.of(2023, 12, 1).minusDays(1), author = "Kouda-Titanium")
+    commits
+        .sortedBy { it.time }
+        .forEach { commit ->
+            println("[${commit.time.render()}] ${commit.repository}: (${commit.author}) ${commit.summary}")
+        }
+}
+
+private suspend fun main3() {
     val organizations = listOf(client.getUserName()) + client.getOrganizations()
     organizations.forEach { organization ->
         val repositories = client.getRepositories(organization)
@@ -34,7 +61,7 @@ private suspend fun main() {
                     println("[${issue.createdAt.render()}] ${issue.author}: ${issue.body.renderAsInline()}")
                 }
 
-                issue.comments.forEach { comment ->
+                issue.comments?.forEach { comment ->
 
                     if (comment.author == "Kouda-Titanium") {
                         printIssue()

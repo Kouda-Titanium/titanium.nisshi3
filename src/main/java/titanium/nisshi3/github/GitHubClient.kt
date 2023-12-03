@@ -1,9 +1,7 @@
 package titanium.nisshi3.github
 
-import com.github.pgreze.process.Redirect
-import com.github.pgreze.process.process
-import com.github.pgreze.process.unwrap
 import kotlinx.coroutines.delay
+import mirrg.kotlin.gson.hydrogen.JsonWrapper
 import mirrg.kotlin.gson.hydrogen.jsonElement
 import mirrg.kotlin.gson.hydrogen.jsonObject
 import mirrg.kotlin.gson.hydrogen.toJson
@@ -17,6 +15,7 @@ import titanium.util.toSafeBashCommand
 import java.io.File
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
@@ -89,39 +88,107 @@ class GitHubClient(val cache: Cache) {
     private suspend fun getAsString(bashScript: String): String {
         return cache.getOrCreate(bashScript) {
             println("< $bashScript")
-            val result = process(
-                *toSafeBashCommand(bashScript).toTypedArray(),
-                stdout = Redirect.CAPTURE,
-                stderr = Redirect.PRINT,
-            )
+            val process = ProcessBuilder(*toSafeBashCommand(bashScript).toTypedArray<String>()).start()
+            val output = process.inputStream.use { it -> it.readBytes().decodeToString() }
+            val returnCode = process.waitFor()
             delay(1000)
-            result.unwrap().join("\n")
+            check(returnCode == 0) { "Invalid result: $returnCode" }
+            output
         }
     }
 
     private suspend fun getAsJsonWrapper(bashScript: String) = getAsString(bashScript).toJsonElement().toJsonWrapper()
+
 
     suspend fun getUserName() = getAsJsonWrapper("gh api user")["login"].asString()
 
     suspend fun getOrganizations() = getAsString("gh org list")
 
     suspend fun getRepositories(organization: String?): List<String> {
-        val data = getAsJsonWrapper("gh repo list${if (organization != null) " $organization" else ""} --json name")
+        val data = getAsJsonWrapper("gh repo list${if (organization != null) " $organization" else ""} --json name --limit 1000")
         return data.asList().map {
             it["name"].asString()
         }
     }
 
+    suspend fun getIssues(organization: String, repository: String): List<Issue> {
+        val data = getAsJsonWrapper("gh issue list -R $organization/$repository -s all --json createdAt,number,author,title,body,comments,repository")
+        return data.asList().map { it.toIssue() }
+    }
+
+    suspend fun searchCommit(startDate: LocalDate, endInclusiveDate: LocalDate, author: String? = null): List<Commit> {
+        val command = listOfNotNull(
+            "gh search commits",
+            author?.let { "--author $it" },
+            "--committer-date $startDate..$endInclusiveDate",
+            "--json author,commit,committer,id,parents,repository,sha,url",
+            "--limit 1000",
+        ).join(" ")
+        val data = getAsJsonWrapper(command)
+        return data.asList().map { it.toCommit() }
+    }
+
+    suspend fun searchIssue(author: String): List<Issue> {
+        val items = listOf(
+            run {
+                val command = listOf(
+                    "gh search issues",
+                    "--author $author",
+                    "--json assignees,author,authorAssociation,body,closedAt,commentsCount,createdAt,id,isLocked,isPullRequest,labels,number,repository,state,title,updatedAt,url",
+                    "--limit 1000",
+                ).join(" ")
+                val data = getAsJsonWrapper(command)
+                data.asList()
+            },
+            run {
+                val command = listOf(
+                    "gh search issues",
+                    "--commenter $author",
+                    "--json assignees,author,authorAssociation,body,closedAt,commentsCount,createdAt,id,isLocked,isPullRequest,labels,number,repository,state,title,updatedAt,url",
+                    "--limit 1000",
+                ).join(" ")
+                val data = getAsJsonWrapper(command)
+                data.asList()
+            },
+        ).flatten()
+            .map { it.toIssue() }
+            .distinctBy { "${it.repository!!}/${it.number}" }
+        return items
+    }
+
+    suspend fun getIssue(repository: String, number: Int): Issue {
+        val command = listOf(
+            "gh issue view",
+            "--repo $repository",
+            "$number",
+            "--json assignees,author,body,closed,closedAt,comments,createdAt,id,labels,milestone,number,projectCards,projectItems,reactionGroups,state,title,updatedAt,url",
+        ).join(" ")
+        val data = getAsJsonWrapper(command)
+        return data.toIssue()
+    }
+
+
     class Issue(
+        val repository: String?,
         val createdAt: Instant,
         val number: Int,
         val author: String,
         val title: String,
         val body: String,
-        val comments: List<Comment>,
+        val comments: List<Comment>?,
     ) {
         override fun toString() = "#$number $title"
     }
+
+    private fun JsonWrapper.toIssue() = Issue(
+        repository = this["repository"].orNull?.let { it["nameWithOwner"].asString() },
+        createdAt = this["createdAt"].asString().toInstant(),
+        number = this["number"].asInt(),
+        author = this["author"]["login"].asString(),
+        title = this["title"].asString(),
+        body = this["body"].asString(),
+        comments = this["comments"].orNull?.asList()?.map { it.toComment() },
+    )
 
     class Comment(
         val createdAt: Instant,
@@ -129,24 +196,24 @@ class GitHubClient(val cache: Cache) {
         val body: String,
     )
 
-    suspend fun getIssues(organization: String, repository: String): List<Issue> {
-        val data = getAsJsonWrapper("gh issue list -R $organization/$repository -s all --json createdAt,number,author,title,body,comments")
-        return data.asList().map {
-            Issue(
-                createdAt = it["createdAt"].asString().toInstant(),
-                number = it["number"].asInt(),
-                author = it["author"]["login"].asString(),
-                title = it["title"].asString(),
-                body = it["body"].asString(),
-                comments = it["comments"].asList().map { comment ->
-                    Comment(
-                        createdAt = comment["createdAt"].asString().toInstant(),
-                        author = comment["author"]["login"].asString(),
-                        body = comment["body"].asString(),
-                    )
-                },
-            )
-        }
-    }
+    private fun JsonWrapper.toComment() = Comment(
+        createdAt = this["createdAt"].asString().toInstant(),
+        author = this["author"]["login"].asString(),
+        body = this["body"].asString(),
+    )
+
+    class Commit(
+        val repository: String,
+        val time: Instant,
+        val author: String,
+        val summary: String,
+    )
+
+    private fun JsonWrapper.toCommit() = Commit(
+        repository = this["repository"]["fullName"].asString(),
+        time = this["commit"]["committer"]["date"].asString().toInstant(),
+        author = this["author"]["login"].asString(),
+        summary = this["commit"]["message"].asString(),
+    )
 
 }
