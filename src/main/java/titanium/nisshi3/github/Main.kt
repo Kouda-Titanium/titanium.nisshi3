@@ -49,11 +49,11 @@ private suspend fun main() {
 
 private fun Instant.render(): String = this.atOffset(ZoneOffset.ofHours(9)).toLocalDateTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
 
-private fun String.renderAsInline(): String {
+private fun String.renderAsInline(chars: Int = 50): String {
     val combinedLine = this.lines().join("\\n")
     return when {
         combinedLine.isEmpty() -> "<no comments>"
-        combinedLine.length > 50 -> combinedLine.take(50) + "..."
+        combinedLine.length > chars -> combinedLine.take(chars) + "..."
         else -> combinedLine
     }
 }
