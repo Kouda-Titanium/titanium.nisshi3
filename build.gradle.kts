@@ -28,7 +28,7 @@ publishing {
             from(components["java"])
             groupId = "titanium"
             artifactId = "titanium.nisshi3"
-            version = "5.1.0"
+            version = "6.0.0"
         }
     }
     repositories {
