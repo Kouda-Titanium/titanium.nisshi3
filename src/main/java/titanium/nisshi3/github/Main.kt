@@ -1,73 +1,92 @@
 package titanium.nisshi3.github
 
+import kotlinx.coroutines.runBlocking
 import mirrg.kotlin.hydrogen.join
 import java.io.File
 import java.time.Duration
 import java.time.Instant
-import java.time.LocalDate
+import java.time.YearMonth
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
-private val client = GitHubClient(GitHubClient.Cache(File("./build/GitHubClient/cache"), Duration.ofMinutes(60)))
+private val client = GitHubClient(GitHubClient.Cache(File("./build/GitHubClient/cache"), Duration.ofMinutes(60)), waitMs = 500)
 
-private suspend fun main() {
-    val issues = client.searchIssue("Kouda-Titanium")
-    issues
-        .flatMap { issue ->
-            val issue2 = client.getIssue(issue.repository!!, issue.number)
-            issue2.comments!!
-                .filter { it.author == "Kouda-Titanium" }
-                .map { comment ->
-                    Pair(issue, comment)
-                }
-        }
-        .sortedBy { it.second.createdAt }
-        .forEach { (issue, comment) ->
-            println("[${comment.createdAt.render()}] ${issue.repository}/#${issue.number}(${issue.title}): <${comment.author}> ${comment.body.renderAsInline(chars = 200)}")
-        }
-}
+object ShowCommentsMain {
+    @JvmStatic
+    fun main(args: Array<String>) = runBlocking {
+        val user = "Kouda-Titanium"
 
-private suspend fun main2() {
-    val commits = client.searchCommit(LocalDate.of(2023, 11, 1), LocalDate.of(2023, 12, 1).minusDays(1), author = "Kouda-Titanium")
-    commits
-        .sortedBy { it.time }
-        .forEach { commit ->
-            println("[${commit.time.render()}] ${commit.repository}: (${commit.author}) ${commit.summary}")
-        }
-}
-
-private suspend fun main3() {
-    val organizations = listOf(client.getUserName()) + client.getOrganizations()
-    organizations.forEach { organization ->
-        val repositories = client.getRepositories(organization)
-        repositories.forEach nextRepository@{ repository ->
-            val issues = try {
-                client.getIssues(organization, repository)
-            } catch (e: RuntimeException) {
-                return@nextRepository
+        val issues = client.searchIssues(user)
+        issues
+            .flatMap { issue ->
+                val issue2 = client.getIssueView(issue.repository, issue.number)
+                issue2.comments
+                    .filter { it.author == user }
+                    .map { comment ->
+                        Pair(issue, comment)
+                    }
             }
-            issues.forEach { issue ->
+            .sortedBy { it.second.createdAt }
+            .forEach { (issue, comment) ->
+                println("[${comment.createdAt.render()}] ${issue.repository}/#${issue.number}(${issue.title}): <${comment.author}> ${comment.body.renderAsInline(200)}")
+            }
+    }
+}
 
-                var printedIssueLine = false
-                fun printIssue() {
-                    if (!printedIssueLine) {
-                        printedIssueLine = true
-                        println("Issue: $organization/$repository/#${issue.number} ${issue.title}")
+object ShowMonthlyCommitsMain {
+    @JvmStatic
+    fun main(args: Array<String>) = runBlocking {
+        val author = "Kouda-Titanium"
+        val period = YearMonth.of(2023, 12)
+
+        val commits = client.searchCommits(
+            period.atDay(1),
+            period.atDay(1).plusMonths(1).minusDays(1),
+            author = author,
+        )
+        commits
+            .sortedBy { it.time }
+            .forEach { commit ->
+                println("[${commit.time.render()}] ${commit.repository.name}: ${commit.message.renderAsInline(200)}")
+            }
+    }
+}
+
+object Main1 {
+    @JvmStatic
+    fun main(args: Array<String>) = runBlocking {
+        val organizations = listOf(client.getUser()) + client.getOrganizationList()
+        organizations.forEach { organization ->
+            val repositories = client.getRepositoryList(organization)
+            repositories.forEach nextRepository@{ repository ->
+                val issues = try {
+                    client.getIssueList(organization, repository.name)
+                } catch (e: RuntimeException) {
+                    return@nextRepository
+                }
+                issues.forEach { issue ->
+
+                    var printedIssueLine = false
+                    fun printIssue() {
+                        if (!printedIssueLine) {
+                            printedIssueLine = true
+                            println("Issue: $organization/${repository.name}/#${issue.number} ${issue.title}")
+                        }
                     }
-                }
 
-                if (issue.author == "Kouda-Titanium") {
-                    printIssue()
-                    println("[${issue.createdAt.render()}] ${issue.author}: ${issue.body.renderAsInline()}")
-                }
-
-                issue.comments?.forEach { comment ->
-
-                    if (comment.author == "Kouda-Titanium") {
+                    if (issue.author == "Kouda-Titanium") {
                         printIssue()
-                        println("[${comment.createdAt.render()}] ${comment.author}: ${comment.body.renderAsInline()}")
+                        println("[${issue.createdAt.render()}] ${issue.author}: ${issue.body.renderAsInline()}")
                     }
 
+                    issue.comments.forEach { comment ->
+
+                        if (comment.author == "Kouda-Titanium") {
+                            printIssue()
+                            println("[${comment.createdAt.render()}] ${comment.author}: ${comment.body.renderAsInline()}")
+                        }
+
+                    }
                 }
             }
         }
