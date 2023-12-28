@@ -19,7 +19,7 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
-class GitHubClient(val cache: Cache) {
+class GitHubClient(val cache: Cache, val waitMs: Int = 1000) {
 
     class Cache(val baseDir: File, val timeout: Duration) {
         suspend fun getOrCreate(key: String, creator: suspend () -> String): String {
@@ -91,7 +91,7 @@ class GitHubClient(val cache: Cache) {
             val process = ProcessBuilder(*toSafeBashCommand(bashScript).toTypedArray<String>()).start()
             val output = process.inputStream.use { it -> it.readBytes().decodeToString() }
             val returnCode = process.waitFor()
-            delay(1000)
+            delay(waitMs.toLong())
             check(returnCode == 0) { "Invalid result: $returnCode" }
             output
         }
@@ -100,120 +100,100 @@ class GitHubClient(val cache: Cache) {
     private suspend fun getAsJsonWrapper(bashScript: String) = getAsString(bashScript).toJsonElement().toJsonWrapper()
 
 
-    suspend fun getUserName() = getAsJsonWrapper("gh api user")["login"].asString()
+    suspend fun getUser() = getAsJsonWrapper("gh api user")["login"].asString()
 
-    suspend fun getOrganizations() = getAsString("gh org list")
+    suspend fun getOrganizationList() = getAsString("gh org list")
 
-    suspend fun getRepositories(organization: String?): List<String> {
-        val data = getAsJsonWrapper("gh repo list${if (organization != null) " $organization" else ""} --json name --limit 1000")
-        return data.asList().map {
-            it["name"].asString()
-        }
+    suspend fun getRepositoryList(organization: String?, limit: Int = 1000): List<ViewRepository> {
+        val command = listOfNotNull(
+            "gh repo list",
+            organization,
+            "--json name",
+            "--limit $limit",
+        ).join(" ")
+        val data = getAsJsonWrapper(command)
+        // assignableUsers,codeOfConduct,contactLinks,createdAt,defaultBranchRef,deleteBranchOnMerge,description,diskUsage,forkCount
+        // fundingLinks,hasDiscussionsEnabled,hasIssuesEnabled,hasProjectsEnabled,hasWikiEnabled,homepageUrl,id,isArchived
+        // isBlankIssuesEnabled,isEmpty,isFork,isInOrganization,isMirror,isPrivate,isSecurityPolicyEnabled,isTemplate
+        // isUserConfigurationRepository,issueTemplates,issues,labels,languages,latestRelease,licenseInfo,mentionableUsers
+        // mergeCommitAllowed,milestones,mirrorUrl,name,nameWithOwner,openGraphImageUrl,owner,parent,primaryLanguage,projects
+        // pullRequestTemplates,pullRequests,pushedAt,rebaseMergeAllowed,repositoryTopics,securityPolicyUrl,squashMergeAllowed
+        // sshUrl,stargazerCount,templateRepository,updatedAt,url,usesCustomOpenGraphImage,viewerCanAdminister
+        // viewerDefaultCommitEmail,viewerDefaultMergeMethod,viewerHasStarred,viewerPermission,viewerPossibleCommitEmails
+        // viewerSubscription,visibility,watchers
+        return data.asList().map { ViewRepository(it) }
     }
 
-    suspend fun getIssues(organization: String, repository: String): List<Issue> {
-        val data = getAsJsonWrapper("gh issue list -R $organization/$repository -s all --json createdAt,number,author,title,body,comments,repository")
-        return data.asList().map { it.toIssue() }
+    suspend fun getIssueList(organization: String, repository: String): List<ViewIssue> {
+        val command = listOfNotNull(
+            "gh issue list",
+            "-R $organization/$repository",
+            "-s all",
+            "--json author,body,comments,createdAt,number,title",
+        ).join(" ")
+        val data = getAsJsonWrapper(command)
+        // assignees,author,body,closed,closedAt,comments,createdAt,id,labels,milestone,number
+        // projectCards,projectItems,reactionGroups,state,title,updatedAt,url
+        return data.asList().map { ViewIssue(it) }
     }
 
-    suspend fun searchCommit(startDate: LocalDate, endInclusiveDate: LocalDate, author: String? = null): List<Commit> {
+    suspend fun searchCommits(startDate: LocalDate, endInclusiveDate: LocalDate, author: String? = null, limit: Int = 1000): List<SearchedCommit> {
         val command = listOfNotNull(
             "gh search commits",
             author?.let { "--author $it" },
             "--committer-date $startDate..$endInclusiveDate",
-            "--json author,commit,committer,id,parents,repository,sha,url",
-            "--limit 1000",
+            "--json author,commit,repository",
+            "--limit $limit",
         ).join(" ")
         val data = getAsJsonWrapper(command)
-        return data.asList().map { it.toCommit() }
+        // author,commit,committer,id,parents,repository,sha,url
+        return data.asList().map { SearchedCommit(it) }
     }
 
-    suspend fun searchIssue(author: String): List<Issue> {
+    /** GitHub全体から特定のユーザーが関与しているIssueを検索します。 */
+    suspend fun searchIssues(user: String): List<SearchedIssue> {
         val items = listOf(
             run {
                 val command = listOf(
                     "gh search issues",
-                    "--author $author",
-                    "--json assignees,author,authorAssociation,body,closedAt,commentsCount,createdAt,id,isLocked,isPullRequest,labels,number,repository,state,title,updatedAt,url",
+                    "--author $user",
+                    "--json author,body,createdAt,number,repository,title",
                     "--limit 1000",
                 ).join(" ")
                 val data = getAsJsonWrapper(command)
+                // assignees,author,authorAssociation,body,closedAt,commentsCount,createdAt,id,isLocked
+                // isPullRequest,labels,number,repository,state,title,updatedAt,url
                 data.asList()
             },
             run {
                 val command = listOf(
                     "gh search issues",
-                    "--commenter $author",
-                    "--json assignees,author,authorAssociation,body,closedAt,commentsCount,createdAt,id,isLocked,isPullRequest,labels,number,repository,state,title,updatedAt,url",
+                    "--commenter $user",
+                    "--json author,body,createdAt,number,repository,title",
                     "--limit 1000",
                 ).join(" ")
                 val data = getAsJsonWrapper(command)
+                // assignees,author,authorAssociation,body,closedAt,commentsCount,createdAt,id,isLocked
+                // isPullRequest,labels,number,repository,state,title,updatedAt,url
                 data.asList()
             },
         ).flatten()
-            .map { it.toIssue() }
-            .distinctBy { "${it.repository!!}/${it.number}" }
+            .map { SearchedIssue(it) }
+            .distinctBy { "${it.repository}/${it.number}" }
         return items
     }
 
-    suspend fun getIssue(repository: String, number: Int): Issue {
+    suspend fun getIssueView(repository: String, number: Int): ViewIssue {
         val command = listOf(
             "gh issue view",
             "--repo $repository",
             "$number",
-            "--json assignees,author,body,closed,closedAt,comments,createdAt,id,labels,milestone,number,projectCards,projectItems,reactionGroups,state,title,updatedAt,url",
+            "--json author,body,comments,createdAt,number,title",
         ).join(" ")
         val data = getAsJsonWrapper(command)
-        return data.toIssue()
+        // assignees,author,body,closed,closedAt,comments,createdAt,id,labels,milestone,number
+        // projectCards,projectItems,reactionGroups,state,title,updatedAt,url
+        return ViewIssue(data)
     }
-
-
-    class Issue(
-        val repository: String?,
-        val createdAt: Instant,
-        val number: Int,
-        val author: String,
-        val title: String,
-        val body: String,
-        val comments: List<Comment>?,
-    ) {
-        override fun toString() = "#$number $title"
-    }
-
-    private fun JsonWrapper.toIssue() = Issue(
-        repository = this["repository"].orNull?.let { it["nameWithOwner"].asString() },
-        createdAt = this["createdAt"].asString().toInstant(),
-        number = this["number"].asInt(),
-        author = this["author"]["login"].asString(),
-        title = this["title"].asString(),
-        body = this["body"].asString(),
-        comments = this["comments"].orNull?.asList()?.map { it.toComment() },
-    )
-
-    class Comment(
-        val createdAt: Instant,
-        val author: String,
-        val body: String,
-    )
-
-    private fun JsonWrapper.toComment() = Comment(
-        createdAt = this["createdAt"].asString().toInstant(),
-        author = this["author"]["login"].asString(),
-        body = this["body"].asString(),
-    )
-
-    class Commit(
-        val repository: String,
-        val time: Instant,
-        val author: String,
-        val summary: String,
-    )
-
-    private fun JsonWrapper.toCommit() = Commit(
-        repository = this["repository"]["fullName"].asString(),
-        time = this["commit"]["committer"]["date"].asString().toInstant(),
-        author = this["author"]["login"].asString(),
-        summary = this["commit"]["message"].asString(),
-    )
 
 }
