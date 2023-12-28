@@ -3,7 +3,7 @@ import java.net.URL
 
 plugins {
     application
-    kotlin("jvm") version "1.9.20"
+    kotlin("jvm") version "1.7.21"
     `maven-publish`
 }
 
@@ -28,7 +28,7 @@ publishing {
             from(components["java"])
             groupId = "titanium"
             artifactId = "titanium.nisshi3"
-            version = "6.0.2"
+            version = "6.0.3"
         }
     }
     repositories {
