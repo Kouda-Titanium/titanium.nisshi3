@@ -14,15 +14,27 @@ class Category(val name: String) {
     override fun toString() = "[$name]"
 }
 
-sealed class DiaryItem(val day: Int, val category: Category) {
+sealed class DiaryItem(val day: Int, var category: Category) {
     init {
         require(day >= 1)
     }
 }
 
-class Work(day: Int, category: Category, val description: String, val timeRanges: HourMinuteRangeList, val isRest: Boolean) : DiaryItem(day, category) {
+operator fun <T : DiaryItem> T.plus(category: Category): T {
+    this.category = category
+    return this
+}
+
+class Work(day: Int, category: Category, val description: String, val timeRanges: HourMinuteRangeList) : DiaryItem(day, category) {
+    var isRest = false
     override fun toString() = "${day formatAs "%2d"}: [${category.name}] ${if (isRest) "* " else ""}${description.replace("""\r\n?|\n""".toRegex(), "|")} ($timeRanges)"
 }
+
+val Work.rest: Work
+    get() {
+        this.isRest = true
+        return this
+    }
 
 class Comment(day: Int, category: Category, val label: String) : DiaryItem(day, category) {
     override fun toString() = "${day formatAs "%2d"}: [${category.name}] ${label.replace("""\r\n?|\n""".toRegex(), "|")}"
