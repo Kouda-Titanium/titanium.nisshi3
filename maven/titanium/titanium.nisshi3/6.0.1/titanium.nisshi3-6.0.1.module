@@ -1,0 +1,103 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "titanium",
+    "module": "titanium.nisshi3",
+    "version": "6.0.1",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "7.6"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.jvm.version": 17,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib-jdk8",
+          "version": {
+            "requires": "1.7.21"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "titanium.nisshi3-6.0.1.jar",
+          "url": "titanium.nisshi3-6.0.1.jar",
+          "size": 136529,
+          "sha512": "4cb154254f8a935eaaa09a2c742d111316be89d79bf8befa6c926f3fa2874d01b3212ed9b00ac5331b9c776950b4317bfb352cfa2b1a40476bc82f61dd9d36b9",
+          "sha256": "a362a3ae73a7b9a6977fcb1d1941106fb3b59bd98c75e45f5e5bd23bee6ee706",
+          "sha1": "bc30ae025ebbc89d62fc714b77eed71054821b27",
+          "md5": "9297bef4ad2d9e2fdf3dd0b8daad3c26"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.jvm.version": 17,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "dependencies": [
+        {
+          "group": "com.github.pgreze",
+          "module": "kotlin-process",
+          "version": {
+            "requires": "1.4.1"
+          }
+        },
+        {
+          "group": "com.google.code.gson",
+          "module": "gson",
+          "version": {
+            "requires": "2.10.1"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-coroutines-core",
+          "version": {
+            "requires": "1.7.1"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib-jdk8",
+          "version": {
+            "requires": "1.7.21"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "titanium.nisshi3-6.0.1.jar",
+          "url": "titanium.nisshi3-6.0.1.jar",
+          "size": 136529,
+          "sha512": "4cb154254f8a935eaaa09a2c742d111316be89d79bf8befa6c926f3fa2874d01b3212ed9b00ac5331b9c776950b4317bfb352cfa2b1a40476bc82f61dd9d36b9",
+          "sha256": "a362a3ae73a7b9a6977fcb1d1941106fb3b59bd98c75e45f5e5bd23bee6ee706",
+          "sha1": "bc30ae025ebbc89d62fc714b77eed71054821b27",
+          "md5": "9297bef4ad2d9e2fdf3dd0b8daad3c26"
+        }
+      ]
+    }
+  ]
+}
