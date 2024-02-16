@@ -9,45 +9,52 @@ import java.time.YearMonth
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
+private val zoneOffset = ZoneOffset.ofHours(9)
+private val user = "Kouda-Titanium"
+private val yearMonth = YearMonth.of(2024, 1)
+
 private val client = GitHubClient(GitHubClient.Cache(File("./build/GitHubClient/cache"), Duration.ofMinutes(60)), waitMs = 500)
 
-object ShowCommentsMain {
+class Action(val time: Instant, val metadata: String, val body: String)
+
+object ShowMonthlyMain {
     @JvmStatic
     fun main(args: Array<String>) = runBlocking {
-        val user = "Kouda-Titanium"
 
-        val issues = client.searchIssues(user)
-        issues
-            .flatMap { issue ->
-                val issue2 = client.getIssueView(issue.repository, issue.number)
-                issue2.comments
-                    .filter { it.author == user }
-                    .map { comment ->
-                        Pair(issue, comment)
+        // Issue主もしくはコメントしたIssueの検索
+        val issueEntries = client.searchIssues(user)
+
+            // Issueのオーナーとコメントのデータを集める
+            .flatMap { searchedIssue ->
+                buildList {
+                    val viewIssue = client.getIssueView(searchedIssue.repository, searchedIssue.number)
+                    if (viewIssue.author == user) {
+                        add(Action(viewIssue.createdAt, "Issue ${searchedIssue.repository}/#${searchedIssue.number}(${searchedIssue.title}): <${viewIssue.author}>", viewIssue.body))
                     }
+                    viewIssue.comments.forEach { comment ->
+                        if (comment.author == user) {
+                            add(Action(comment.createdAt, "IsCmt ${searchedIssue.repository}/#${searchedIssue.number}(${searchedIssue.title}): <${comment.author}>", comment.body))
+                        }
+                    }
+                }
             }
-            .sortedBy { it.second.createdAt }
-            .forEach { (issue, comment) ->
-                println("[${comment.createdAt.render()}] ${issue.repository}/#${issue.number}(${issue.title}): <${comment.author}> ${comment.body.renderAsInline(200)}")
-            }
-    }
-}
 
-object ShowMonthlyCommitsMain {
-    @JvmStatic
-    fun main(args: Array<String>) = runBlocking {
-        val author = "Kouda-Titanium"
-        val period = YearMonth.of(2023, 12)
+            // 範囲絞り込み
+            .filter { it.time >= yearMonth.atDay(1).atStartOfDay(zoneOffset).toInstant() }
+            .filter { it.time < yearMonth.atDay(1).plusMonths(1).minusDays(1).atStartOfDay(zoneOffset).toInstant() }
 
-        val commits = client.searchCommits(
-            period.atDay(1),
-            period.atDay(1).plusMonths(1).minusDays(1),
-            author = author,
-        )
-        commits
+        // コミットを検索
+        val commitEntries = client.searchCommits(
+            yearMonth.atDay(1).atStartOfDay(zoneOffset).toOffsetDateTime(),
+            yearMonth.atDay(1).plusMonths(1).minusDays(1).atStartOfDay(zoneOffset).toOffsetDateTime(),
+            author = user,
+        ).map { Action(it.time, "Comit ${it.repository.name}:", it.message) }
+
+        // 表示
+        listOf(issueEntries, commitEntries).flatten()
             .sortedBy { it.time }
-            .forEach { commit ->
-                println("[${commit.time.render()}] ${commit.repository.name}: ${commit.message.renderAsInline(200)}")
+            .forEach {
+                println("[${it.time.render()}] ${it.metadata} ${it.body.renderAsInline(200)}")
             }
     }
 }

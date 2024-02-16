@@ -1,7 +1,6 @@
 package titanium.nisshi3.github
 
 import kotlinx.coroutines.delay
-import mirrg.kotlin.gson.hydrogen.JsonWrapper
 import mirrg.kotlin.gson.hydrogen.jsonElement
 import mirrg.kotlin.gson.hydrogen.jsonObject
 import mirrg.kotlin.gson.hydrogen.toJson
@@ -15,7 +14,7 @@ import titanium.util.toSafeBashCommand
 import java.io.File
 import java.time.Duration
 import java.time.Instant
-import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
@@ -137,11 +136,11 @@ class GitHubClient(val cache: Cache, val waitMs: Int = 1000) {
         return data.asList().map { ViewIssue(it) }
     }
 
-    suspend fun searchCommits(startDate: LocalDate, endInclusiveDate: LocalDate, author: String? = null, limit: Int = 1000): List<SearchedCommit> {
+    suspend fun searchCommits(startTime: OffsetDateTime, endInclusiveTime: OffsetDateTime, author: String? = null, limit: Int = 1000): List<SearchedCommit> {
         val command = listOfNotNull(
             "gh search commits",
             author?.let { "--author $it" },
-            "--committer-date $startDate..$endInclusiveDate",
+            "--committer-date ${startTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)}..${endInclusiveTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)}",
             "--json author,commit,repository",
             "--limit $limit",
         ).join(" ")
