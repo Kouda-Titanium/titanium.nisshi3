@@ -1,6 +1,9 @@
 package titanium.nisshi3.github
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import mirrg.kotlin.gson.hydrogen.jsonElement
 import mirrg.kotlin.gson.hydrogen.jsonObject
 import mirrg.kotlin.gson.hydrogen.toJson
@@ -86,13 +89,22 @@ class GitHubClient(val cache: Cache, val waitMs: Int = 1000) {
 
     private suspend fun getAsString(bashScript: String): String {
         return cache.getOrCreate(bashScript) {
-            println("< $bashScript")
-            val process = ProcessBuilder(*toSafeBashCommand(bashScript).toTypedArray<String>()).start()
-            val output = process.inputStream.use { it -> it.readBytes().decodeToString() }
-            val returnCode = process.waitFor()
-            delay(waitMs.toLong())
-            check(returnCode == 0) { "Invalid result: $returnCode" }
-            output
+            coroutineScope {
+                println("< $bashScript")
+                val process = ProcessBuilder(*toSafeBashCommand(bashScript).toTypedArray<String>()).start()
+                val output = process.inputStream.use { it.readBytes().decodeToString() }
+
+                launch(Dispatchers.IO) {
+                    process.errorReader().forEachLine {
+                        System.err.println(it)
+                    }
+                }
+
+                val returnCode = process.waitFor()
+                delay(waitMs.toLong())
+                check(returnCode == 0) { "Invalid result: $returnCode" }
+                output
+            }
         }
     }
 
